@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="C:/Users/Bruker/TDT4145/TDT4145/JernbaneDBNY.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="1"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="150"/><column_width id="3" width="6980"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,15:mainJernbanestasjon"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="Banestrekning" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="140"/><column index="2" value="183"/><column index="4" value="186"/><column index="5" value="186"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Jernbanestasjon" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="120"/><column index="2" value="61"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Operatør" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="64"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="StasjonITabell" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="126"/><column index="2" value="127"/><column index="3" value="139"/><column index="4" value="97"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Vognoppsett" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="116"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1">BEGIN TRANSACTION;
+CREATE TABLE IF NOT EXISTS &quot;Jernbanestasjon&quot; (
+	&quot;Navn&quot;	TEXT NOT NULL UNIQUE,
+	&quot;Moh.&quot;	INTEGER NOT NULL,
+	PRIMARY KEY(&quot;Navn&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;Operatør&quot; (
+	&quot;Navn&quot; TEXT NOT NULL UNIQUE,
+	PRIMARY KEY(&quot;Navn&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;Vognoppsett&quot; (
+	&quot;OppsettID&quot; INTEGER NOT NULL UNIQUE,
+	PRIMARY KEY(&quot;OppsettID&quot; AUTOINCREMENT)
+);
+CREATE TABLE IF NOT EXISTS &quot;Banestrekning&quot; (
+    &quot;Navn&quot;	TEXT NOT NULL UNIQUE,
+    &quot;Fremdriftsenergi&quot;	TEXT NOT NULL,
+    &quot;Hovedretning&quot; TEXT NOT NULL,
+	&quot;StartstasjonNavn&quot; TEXT NOT NULL,
+	&quot;EndestasjonNavn&quot;  TEXT NOT NULL,
+    CONSTRAINT &quot;CheckFremdriftsenergi&quot; CHECK(&quot;Fremdriftsenergi&quot; = 'Diesel' OR &quot;Fremdriftsenergi&quot; = 'Elektrisk'),
+	-- Antar at navn for de to strekningene 
+	-- er Retning 1 og Retning 2
+    CONSTRAINT &quot;CheckHovedretning&quot; CHECK(&quot;Hovedretning&quot; = 'Retning1' OR &quot;Hovedretning&quot; = 'Retning2'),
+    FOREIGN KEY(&quot;StartstasjonNavn&quot;) REFERENCES &quot;Jernbanestasjon&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY(&quot;EndestasjonNavn&quot;) REFERENCES &quot;Jernbanestasjon&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+    PRIMARY KEY(&quot;Navn&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;Togrute&quot; (
+	&quot;RuteNr&quot; INTEGER NOT NULL UNIQUE,
+	&quot;Retning&quot; TEXT NOT NULL,
+	&quot;OperatørNavn&quot; TEXT NOT NULL,
+	&quot;OppsettID&quot; INTEGER NOT NULL,
+	&quot;BanestrekningNavn&quot; TEXT NOT NULL
+	CONSTRAINT &quot;CheckRetning&quot; CHECK(&quot;Retning&quot; = 'MedHovedretning' OR &quot;Retning&quot; = 'MotHovedretning'),
+	FOREIGN KEY(&quot;OperatørNavn&quot;) REFERENCES &quot;Operatør&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(&quot;OppsettID&quot;) REFERENCES &quot;Vognoppsett&quot;(&quot;OppsettID&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY(&quot;BanestrekningNavn&quot;) REFERENCES &quot;Banestrekning&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;RuteNr&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;Vogntype&quot; (
+	-- VognID tekst og ikke tall fordi det er det unike navnet
+	&quot;VognID&quot; TEXT NOT NULL UNIQUE,
+	&quot;Tilgjengelighet&quot; BOOLEAN NOT NULL,
+	PRIMARY KEY(&quot;VognID&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;Sittevogn&quot; (
+	&quot;AntallSeter&quot; INTEGER NOT NULL,
+	&quot;VognID&quot; TEXT NOT NULL,
+	&quot;Tilgjengelighet&quot; BOOLEAN NOT NULL,
+	&quot;OperatørNavn&quot; TEXT NOT NULL,
+    CONSTRAINT &quot;CheckAntallSeter&quot; CHECK (&quot;AntallSeter&quot; &gt; 0),
+	FOREIGN KEY(&quot;VognID&quot;) REFERENCES &quot;Vogntype&quot;(&quot;VognID&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(&quot;Tilgjengelighet&quot;) REFERENCES &quot;Vogntype&quot;(&quot;Tilgjengelighet&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(&quot;OperatørNavn&quot;) REFERENCES &quot;Operatør&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;VognID&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;Sovevogn&quot; (
+	&quot;AntallSovekupeer&quot; INTEGER NOT NULL,
+	&quot;VognID&quot; TEXT NOT NULL,
+	&quot;Tilgjengelighet&quot; BOOLEAN,
+	&quot;OperatørNavn&quot; TEXT NOT NULL,
+    CONSTRAINT &quot;CheckAntallSovekupeer&quot; CHECK (&quot;AntallSovekupeer&quot; &gt; 0),
+	FOREIGN KEY(&quot;VognID&quot;) REFERENCES &quot;Vogntype&quot;(&quot;VognID&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(&quot;Tilgjengelighet&quot;) REFERENCES &quot;Vogntype&quot;(&quot;Tilgjengelighet&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY(&quot;OperatørNavn&quot;) REFERENCES &quot;Operatør&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;VognID&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;Sete&quot; (
+	&quot;SeteNr&quot; INTEGER NOT NULL,
+	&quot;Tilgjengelighet&quot; BOOLEAN NOT NULL,
+	&quot;VognID&quot; TEXT NOT NULL,
+    FOREIGN KEY (&quot;VognID&quot;) REFERENCES &quot;Sittevogn&quot;(&quot;VognID&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;SeteNr&quot;, &quot;VognID&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;Sovekupé&quot; (
+    &quot;KupéNr&quot; INTEGER NOT NULL,
+	&quot;Tilgjengelighet&quot; BOOLEAN NOT NULL,
+	&quot;VognID&quot; TEXT NOT NULL,
+	FOREIGN KEY (&quot;VognID&quot;) REFERENCES &quot;Sovevogn&quot;(&quot;VognID&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;KupéNr&quot;, &quot;VognID&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;Togruteforekomst&quot; (
+	&quot;Dato&quot; DATE NOT NULL,
+	&quot;RuteNr&quot; INTEGER NOT NULL,
+	FOREIGN KEY(&quot;RuteNr&quot;) REFERENCES &quot;Togrute&quot;(&quot;RuteNr&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;Dato&quot;, &quot;RuteNr&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;Kunde&quot; (
+	&quot;KundeNr&quot; INTEGER NOT NULL UNIQUE,
+	&quot;Navn&quot; TEXT NOT NULL,
+	&quot;Epost&quot; TEXT NOT NULL,
+    &quot;MobilNr&quot; TEXT NOT NULL,
+    CONSTRAINT &quot;CheckEpost&quot; CHECK (&quot;Epost&quot; LIKE '%_@__%.__%'),
+    CONSTRAINT &quot;CheckMobilNr&quot; CHECK (&quot;MobilNr&quot; LIKE '^[[:digit:]]{8}$'),
+	PRIMARY KEY(&quot;KundeNr&quot; AUTOINCREMENT)
+);
+CREATE TABLE IF NOT EXISTS &quot;Kundeordre&quot; (
+	&quot;OrdreNr&quot; INTEGER NOT NULL UNIQUE,
+	&quot;DagKjøpt&quot; DATE NOT NULL,
+	&quot;TidKjøpt&quot; TIME NOT NULL,
+	&quot;Antall&quot; INTEGER NOT NULL,
+	&quot;KundeNr&quot; INTEGER NOT NULL,
+	&quot;RuteNr&quot; INTEGER NOT NULL,
+	&quot;Dato&quot; DATE NOT NULL,
+	CONSTRAINT &quot;Antall&quot; CHECK (&quot;Antall&quot; &gt; 0),
+	FOREIGN KEY(&quot;KundeNr&quot;) REFERENCES &quot;Kunde&quot;(&quot;KundeNr&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(&quot;RuteNr&quot;) REFERENCES &quot;Togrute&quot;(&quot;RuteNr&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(&quot;Dato&quot;) REFERENCES &quot;Togruteforekomst&quot;(&quot;Dato&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+    PRIMARY KEY(&quot;OrdreNr&quot; AUTOINCREMENT)
+);
+CREATE TABLE IF NOT EXISTS &quot;Delstrekning&quot; (
+	&quot;Navn&quot; TEXT NOT NULL UNIQUE,
+	&quot;Lengde&quot; INTEGER NOT NULL,
+	&quot;TypeSpor&quot; TEXT NOT NULL,
+	&quot;FraStasjonNavn&quot; TEXT NOT NULL,
+	&quot;TilStasjonNavn&quot; TEXT NOT NULL,
+	-- Navn til delstrekning skal være gitt av de to jernbanestasjonene 
+	-- (minst to bokstavers navn) med en bindestrek mellom
+	CONSTRAINT &quot;Navn&quot; CHECK(&quot;Navn&quot; LIKE '_%-%_'),
+	CONSTRAINT &quot;CheckLengde&quot; CHECK(&quot;Lengde&quot; &gt; 0),
+    CONSTRAINT &quot;TypeSpor&quot; CHECK(&quot;TypeSpor&quot; = 'Enkeltspor' OR &quot;TypeSpor&quot; = 'Dobbeltspor'),
+	FOREIGN KEY(&quot;FraStasjonNavn&quot;) REFERENCES &quot;Jernbanestasjon&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(&quot;TilStasjonNavn&quot;) REFERENCES &quot;Jernbanestasjon&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;Navn&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;KjøpAvSete&quot; (
+	&quot;OrdreNr&quot; INTEGER NOT NULL,
+	&quot;SeteNr&quot; INTEGER NOT NULL,
+	&quot;VognID&quot; TEXT NOT NULL,
+	FOREIGN KEY(&quot;OrdreNr&quot;) REFERENCES &quot;KundeOrdre&quot;(&quot;OrdreNr&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY(&quot;SeteNr&quot;, &quot;VognID&quot;) REFERENCES &quot;Sete&quot;(&quot;SeteNr&quot;, &quot;VognID&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;OrdreNr&quot;, &quot;SeteNr&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;KjøpAvKupé&quot; (
+	&quot;OrdreNr&quot; INTEGER NOT NULL,
+	&quot;KupéNr&quot; INTEGER NOT NULL,
+	&quot;VognID&quot; TEXT NOT NULL,
+	FOREIGN KEY(&quot;OrdreNr&quot;) REFERENCES &quot;KundeOrdre&quot;(&quot;OrdreNr&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY(&quot;KupéNr&quot;, &quot;VognID&quot;) REFERENCES &quot;SoveKupé&quot;(&quot;KupéNr&quot;, &quot;VognID&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;OrdreNr&quot;, &quot;KupéNr&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;MellomstasjonRute&quot; (
+    &quot;Ankomsttid&quot; TIME NOT NULL,
+    &quot;Avgangstid&quot; TIME NOT NULL,
+	&quot;RuteNr&quot; INTEGER NOT NULL,
+	&quot;StasjonNavn&quot; TEXT NOT NULL,
+	FOREIGN KEY(&quot;RuteNr&quot;) REFERENCES &quot;Togrute&quot;(&quot;RuteNr&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(&quot;StasjonNavn&quot;) REFERENCES &quot;Jernbanestasjon&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;RuteNr&quot;, &quot;StasjonNavn&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;StasjonITabell&quot; (
+	&quot;Avgangstid&quot; TIME,
+	&quot;Ankomsttid&quot; TIME,
+	&quot;StasjonNavn&quot; TEXT NOT NULL,
+	&quot;TabellNr&quot; INTEGER NOT NULL,
+	FOREIGN KEY(&quot;StasjonNavn&quot;) REFERENCES &quot;Jernbanestasjon&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(&quot;TabellNr&quot;) REFERENCES &quot;Togruteforekomst&quot;(&quot;TabellNr&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;StasjonNavn&quot;, &quot;TabellNr&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;EndestasjonRute&quot; (
+	&quot;Ankomsttid&quot; TIME NOT NULL,
+	&quot;StasjonNavn&quot; TEXT NOT NULL,
+	&quot;RuteNr&quot; INTEGER NOT NULL,
+	FOREIGN KEY(&quot;RuteNr&quot;) REFERENCES &quot;Togrute&quot;(&quot;RuteNr&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(&quot;StasjonNavn&quot;) REFERENCES &quot;Jernbanestasjon&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;RuteNr&quot;, &quot;StasjonNavn&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;StartstasjonRute&quot; (
+	&quot;Avgangstid&quot; TIME NOT NULL,
+	&quot;StasjonNavn&quot; TEXT NOT NULL,
+	&quot;RuteNr&quot; INTEGER NOT NULL,
+	FOREIGN KEY(&quot;RuteNr&quot;) REFERENCES &quot;Togrute&quot;(&quot;RuteNr&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(&quot;StasjonNavn&quot;) REFERENCES &quot;Jernbanestasjon&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;RuteNr&quot;, &quot;StasjonNavn&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;Togrutetabell&quot; (
+	&quot;TabellNr&quot; INTEGER UNIQUE NOT NULL,
+	&quot;RuteNr&quot; INTEGER NOT NULL,
+	FOREIGN KEY(&quot;RuteNr&quot;) REFERENCES &quot;Togrute&quot;(&quot;RuteNr&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;TabellNr&quot;, &quot;RuteNr&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;VognIOppsett&quot; (
+	&quot;VognNr&quot; INTEGER NOT NULL,
+	&quot;VognID&quot; TEXT NOT NULL,
+	&quot;OppsettID&quot; INTEGER NOT NULL,
+	FOREIGN KEY(&quot;VognID&quot;) REFERENCES &quot;Vogntype&quot;(&quot;VognID&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(&quot;OppsettID&quot;) REFERENCES &quot;Vognoppsett&quot;(&quot;OppsettID&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;VognID&quot;)
+);
+CREATE TABLE IF NOT EXISTS &quot;MellomstasjonBane&quot; (
+	&quot;BanestrekningNavn&quot; TEXT NOT NULL,
+	&quot;StasjonNavn&quot; TEXT NOT NULL,
+	FOREIGN KEY(&quot;BanestrekningNavn&quot;) REFERENCES &quot;Banestrekning&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(&quot;StasjonNavn&quot;) REFERENCES &quot;Jernbanestasjon&quot;(&quot;Navn&quot;) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY(&quot;BanestrekningNavn&quot;, &quot;StasjonNavn&quot;)
+);
+COMMIT;</sql><current_tab id="0"/></tab_sql></sqlb_project>
