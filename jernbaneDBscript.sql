@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS "Banestrekning" (
     FOREIGN KEY("EndestasjonNavn") REFERENCES "Jernbanestasjon"("Navn") ON UPDATE CASCADE ON DELETE CASCADE,
     PRIMARY KEY("Navn")
 );
+
 CREATE TABLE IF NOT EXISTS "Togrute" (
 	"RuteNr" INTEGER NOT NULL UNIQUE,
 	"Retning" TEXT NOT NULL,
@@ -38,6 +39,23 @@ CREATE TABLE IF NOT EXISTS "Togrute" (
     FOREIGN KEY("BanestrekningNavn") REFERENCES "Banestrekning"("Navn") ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY("RuteNr")
 );
+
+
+CREATE TABLE IF NOT EXISTS "Dag"(
+	--Ny database Dag og realsjon Kjører
+	"Dag" TEXT  NOT NULL UNIQUE,
+	PRIMARY KEY("Dag")
+);
+
+CREATE TABLE IF NOT EXISTS "Kjører"(
+	"Dag" TEXT NOT NULL,
+	"RuteNr" INTEGER NOT NULL,
+	FOREIGN KEY("RuteNr") REFERENCES "Togrute"("RuteNr") ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY("Dag") REFERENCES "Dag"("Dag") ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY("Dag", "RuteNr")
+);
+
+
 CREATE TABLE IF NOT EXISTS "Vogntype" (
 	-- VognID tekst og ikke tall fordi det er det unike navnet
 	"VognID" TEXT NOT NULL UNIQUE,
