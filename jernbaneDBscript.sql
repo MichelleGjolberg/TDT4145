@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS "Kunde" (
 	"Epost" TEXT NOT NULL,
     "MobilNr" TEXT NOT NULL,
     CONSTRAINT "CheckEpost" CHECK ("Epost" LIKE '%_@__%.__%'),
-    CONSTRAINT "CheckMobilNr" CHECK ("MobilNr" LIKE '^[[:digit:]]{8}$'),
+    --CONSTRAINT "CheckMobilNr" CHECK ("MobilNr" LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]' and len("MobilNr")=8 ),
 	PRIMARY KEY("KundeNr" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "Kundeordre" (
