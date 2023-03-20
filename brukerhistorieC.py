@@ -1,33 +1,29 @@
 import sqlite3
-con = sqlite3.connect("nydb.db") #Må hente databasefilen
+con = sqlite3.connect("testDB3.db") #Må hente databasefilen
 
 cursor = con.cursor()
 
-#cursor.execute('''INSERT INTO Togrute VALUES ('1', 'MedHovedretning', 'SVJ', '2', 'Nordlandsbanen')''')
-#cursor.execute('''INSERT INTO Togruteforekomst VALUES ('10.10.22', 1)''')
-#cursor.execute('''INSERT INTO MellomstasjonRute VALUES ('10:10:00','10:11:00', '1', 'Mosjøen' )''')
-#cursor.execute('''INSERT INTO StartstasjonRute VALUES ('10:09:00', '1', 'Bodø' )''')
-#cursor.execute('''INSERT INTO Togruteforekomst VALUES ('10.10.22', 1)''')
-cursor.execute('''INSERT INTO Dag VALUES ('Tirsdag')''')
 
-stasjonsNavn = input('Enter station name: ')
-dato = input('Enter date: ')
-dag = input('Enter dag: ')
+stasjonsNavn = input('Skriv inn stasjon: ')
+dag = input('Skriv inn dag: ')
 
 
-query = ('''SELECT *
+
+query = ('''SELECT Togrute.RuteNr
 FROM Togrute 
 INNER JOIN MellomstasjonRute ON Togrute.RuteNr = MellomstasjonRute.RuteNr
 INNER JOIN StartstasjonRute ON Togrute.RuteNr = StartstasjonRute.RuteNr
-INNER JOIN TogruteForekomst ON Togrute.RuteNr = TogruteForekomst.RuteNr
-WHERE MellomstasjonRute.StasjonNavn = ? AND Dag.Dag = ?
+INNER JOIN Kjører ON Togrute.RuteNr = Kjører.RuteNr
+WHERE MellomstasjonRute.StasjonNavn = ? AND Kjører.Dag = ?
 ''')
         
          
 
 
-print()
-print(cursor.execute(query, (stasjonsNavn,dato)))
+
+print('Disse togrutene kjører gjennom' , str(stasjonsNavn) ,'på' , str(dag) ,':', cursor.execute(query, (stasjonsNavn, dag))
+      .fetchall())
+
 
 
 for row in cursor.fetchall():
