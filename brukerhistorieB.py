@@ -26,6 +26,24 @@ cursor.execute('''INSERT INTO Vognoppsett VALUES (3)''')
 cursor.execute('''INSERT INTO Sittevogn VALUES (12, 'SJ-sittevogn1-4',False,'SJ')''')
 cursor.execute('''INSERT INTO VognIOppsett VALUES (1,'SJ-sittevogn1-4',3)''')
 
+#Legger til seter og soveplasser
+
+SittevognerType1 = ['SJ-sittevogn1-1','SJ-sittevogn1-2''SJ-sittevogn1-3','SJ-sittevogn1-4']
+
+for i in range(0, len(SittevognerType1)):
+    
+    for j in range(0,13):
+        cursor.execute(f'''INSERT INTO Sete VALUES ({i},{SittevognerType1[i]})''')
+
+SovevognerType1 = ['SJ-sovevogn1-1']
+
+for i in range(0, len(SovevognerType1)):
+    
+    for j in range(0,5):
+        cursor.execute(f'''INSERT INTO Sovekupé VALUES ({i},{SovevognerType1[i]})''')
+
+
+
 #Legger til Togrute
 cursor.execute('''INSERT INTO Togrute VALUES (1,'MedHovedretning','SJ','1','Norlandsbanen')''') #Dagtog Trondheim til Bodø
 cursor.execute('''INSERT INTO Togrute VALUES (2,'MedHovedretning','SJ','2','Norlandsbanen')''') #Natttog Trondheim til Bodø
