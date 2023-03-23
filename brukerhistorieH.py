@@ -5,15 +5,6 @@ con = sqlite3.connect("testDB3.db") #Må hente databasefilen
 
 cursor = con.cursor()
 
-#Info man bruke til å teste
-#cursor.execute('''INSERT INTO Kunde VALUES (1,'Maria','maria@gmail.com','12345679')''')
-#cursor.execute('''INSERT INTO Togruteforekomst VALUES ('2023-07-17',3)''')
-#cursor.execute('''INSERT INTO Kundeordre VALUES (1,'Mandag','12:00:00', 2, 1, 3,'2023-07-17')''')
-#cursor.execute('''INSERT INTO KjøpAvSete VALUES (1,1,'SJ-sittevogn1-4')''')
-#cursor.execute('''INSERT INTO KjøpAvSete VALUES (1,2,'SJ-sittevogn1-4')''')
-#cursor.execute('''INSERT INTO Sete VALUES (1,'false','SJ-sittevogn1-4')''')
-#cursor.execute('''INSERT INTO Sete VALUES (2,'false','SJ-sittevogn1-4')''')
-
 #Spørre om kundenr
 kundeNr = input('Hva er ditt KundeNr?')
 res = cursor.execute(f"SELECT * FROM Kundeordre WHERE KundeNr = {kundeNr} ")  
@@ -23,7 +14,11 @@ result = res.fetchall()
 date = datetime.today()
 
 #Henter ut alle ordre fra kunden som er i dag eller senere
-togruteInfo = cursor.execute(f"SELECT RuteNr, Retning, BanestrekningNavn,od.OrdreNr, od.KundeNr, od.Antall,  od.Dato  FROM Togrute NATURAL JOIN (SELECT ko.OrdreNr, ko.Antall, ko.KundeNr, tf.RuteNr, tf.Dato  FROM Kundeordre AS ko INNER JOIN Togruteforekomst AS tf WHERE ko.RuteNr = tf.RuteNr AND ko.Dato = tf.Dato AND ko.KundeNr = {kundeNr}) AS od WHERE od.Dato >= '{date}'") 
+togruteInfo = cursor.execute(f'''SELECT RuteNr, Retning, BanestrekningNavn,od.OrdreNr, od.KundeNr, 
+od.Antall,  od.Dato, od.startStasjon, od.endeStasjon  FROM Togrute NATURAL JOIN 
+(SELECT ko.OrdreNr, ko.Antall, ko.KundeNr, tf.RuteNr, tf.Dato , ko.startStasjon, ko.endeStasjon 
+FROM Kundeordre AS ko INNER JOIN Togruteforekomst AS tf 
+WHERE ko.RuteNr = tf.RuteNr AND ko.Dato = tf.Dato AND ko.KundeNr = {kundeNr}) AS od WHERE od.Dato >= "{date}"''') 
 togruteres =togruteInfo.fetchall()
 
 for j in range(0,len(togruteres)):
@@ -31,6 +26,9 @@ for j in range(0,len(togruteres)):
             print("\nAntall plasser: " + str(togruteres[j][5]) + ", \nBane: " + str(togruteres[j][2]) + "\nRetning: " + str(togruteres[j][1]) + ", \nRute nummer: "+ str(togruteres[j][0]) + ", \nDato: "+ str(togruteres[j][6]))
 
             #Henter ut alle stasjoner med tider
+            print("Du/Dere reiser fra: " + str(togruteres[j][7]))
+            print("Du/Dere reiser til: " + str(togruteres[j][8]))
+            print("\nOversikt over ankomst/angangstider:")
             startInfo = cursor.execute(f"SELECT StasjonNavn, Avgangstid FROM StartstasjonRute WHERE RuteNr = {togruteres[j][0]}")
             startStasjon = startInfo.fetchall()
 
@@ -40,7 +38,7 @@ for j in range(0,len(togruteres)):
             mellomInfo = cursor.execute(f"SELECT StasjonNavn, Ankomsttid, Avgangstid FROM mellomstasjonRute WHERE RuteNr = {togruteres[j][0]}")
             mellomstasjoner = mellomInfo.fetchall()
 
-            print("\n\nStasjon | Stasjons navn | Ankomsttid | Avgangstid ")
+            print("\n\Stasjon | Stasjons navn | Ankomsttid | Avgangstid ")
             print("Start   | " + str(startStasjon[0][0]) + " |  | " +str(startStasjon[0][1]))
             
             for t in range (0, len(mellomstasjoner)):
