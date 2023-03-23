@@ -1,6 +1,6 @@
 
 import sqlite3
-con = sqlite3.connect("testDB3.db") #Må hente databasefilen
+con = sqlite3.connect("jernbaneDBnynyny.db") #Må hente databasefilen
 cursor = con.cursor()
 #Legger til dager
 cursor.execute('''INSERT INTO Dag VALUES ("Mandag")''')

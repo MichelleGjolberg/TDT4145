@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime
 
-con = sqlite3.connect("testDB4.db") #Må hente databasefilen
+con = sqlite3.connect("jernbaneDBnynyny.db") #Må hente databasefilen
 
 cursor = con.cursor()
 

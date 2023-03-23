@@ -127,21 +127,25 @@ CREATE TABLE IF NOT EXISTS "Kundeordre" (
 	FOREIGN KEY("Dato") REFERENCES "Togruteforekomst"("Dato") ON UPDATE CASCADE ON DELETE CASCADE,
     PRIMARY KEY("OrdreNr" AUTOINCREMENT)
 );
-CREATE TABLE IF NOT EXISTS "Delstrekning" (
-	"Navn" TEXT NOT NULL UNIQUE,
-	"Lengde" INTEGER NOT NULL,
-	"TypeSpor" TEXT NOT NULL,
-	"FraStasjonNavn" TEXT NOT NULL,
-	"TilStasjonNavn" TEXT NOT NULL,
+
+CREATE TABLE "Delstrekning" (
 	-- Navn til delstrekning skal være gitt av de to jernbanestasjonene 
 	-- (minst to bokstavers navn) med en bindestrek mellom
-	CONSTRAINT "Navn" CHECK("Navn" LIKE '_%-%_'),
-	CONSTRAINT "CheckLengde" CHECK("Lengde" > 0),
-    CONSTRAINT "TypeSpor" CHECK("TypeSpor" = 'Enkeltspor' OR "TypeSpor" = 'Dobbeltspor'),
-	FOREIGN KEY("FraStasjonNavn") REFERENCES "Jernbanestasjon"("Navn") ON UPDATE CASCADE ON DELETE CASCADE,
+	"Navn"	TEXT NOT NULL UNIQUE,
+	"Lengde"	INTEGER NOT NULL,
+	"TypeSpor"	TEXT NOT NULL,
+	"FraStasjonNavn"	TEXT NOT NULL,
+	"TilStasjonNavn"	TEXT NOT NULL,
+	"BanestrekningNavn"	TEXT,
 	FOREIGN KEY("TilStasjonNavn") REFERENCES "Jernbanestasjon"("Navn") ON UPDATE CASCADE ON DELETE CASCADE,
-	PRIMARY KEY("Navn")
+	FOREIGN KEY("FraStasjonNavn") REFERENCES "Jernbanestasjon"("Navn") ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY("BanestrekningNavn") REFERENCES "Banestrekning"("Navn") ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY("Navn"),
+	CONSTRAINT "TypeSpor" CHECK("TypeSpor" = 'Enkeltspor' OR "TypeSpor" = 'Dobbeltspor'),
+	CONSTRAINT "CheckLengde" CHECK("Lengde" > 0),
+	CONSTRAINT "Navn" CHECK("Navn" LIKE '_%-%_')
 );
+
 CREATE TABLE IF NOT EXISTS "KjøpAvSete" (
 	"OrdreNr" INTEGER NOT NULL,
 	"SeteNr" INTEGER NOT NULL,

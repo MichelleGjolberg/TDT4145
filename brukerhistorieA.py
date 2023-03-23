@@ -1,5 +1,5 @@
 import sqlite3
-con = sqlite3.connect("jernbaneDB.db") #Må hente databasefilen
+con = sqlite3.connect("jernbaneDBnynyny.db") #Må hente databasefilen
 
 cursor = con.cursor()
 
