@@ -5,61 +5,32 @@ con = sqlite3.connect("jernbaneDBnynyny.db") #Må hente databasefilen
 
 cursor = con.cursor()
 
-# Prøveverdier for sete og sovekupe, trenger nok ikke men sletter ikke i tilfelle
+# For å kunne teste i databasen
 # cursor.execute('''INSERT INTO Sete VALUES (1, True, 'SJ-sittevogn-1-1')''')
 # cursor.execute('''INSERT INTO Sete VALUES (2, True, 'SJ-sittevogn-1-1')''')
 # cursor.execute('''INSERT INTO Sovekupé VALUES (1, True, 'SJ-sovevogn-1-1')''')
 # cursor.execute('''INSERT INTO Sovekupé VALUES (2, True, 'SJ-sovevogn-1-1')''')
-# cursor.execute('''INSERT INTO SovekupéPåForekomst VALUES (1, True, 'SJ-sovevogn-1-1', '2023-04-03', 1)''')
-# cursor.execute('''INSERT INTO SovekupéPåForekomst VALUES (2, True, 'SJ-sovevogn-1-1', '2023-04-03', 1)''')
-# cursor.execute('''INSERT INTO SovekupéPåForekomst VALUES (1, True, 'SJ-sovevogn-1-1', '2023-04-04', 1)''')
-# cursor.execute('''INSERT INTO SovekupéPåForekomst VALUES (2, True, 'SJ-sovevogn-1-1', '2023-04-04', 1)''')
-# cursor.execute('''INSERT INTO SetePåForekomst VALUES (1, True, 'SJ-sovevogn-1-1', '2023-04-03', 1, "Trondheim S", "Mosjøen")''')
-# cursor.execute('''INSERT INTO SetePåForekomst VALUES (2, True, 'SJ-sovevogn-1-1', '2023-04-03', 1, "Trondheim S", "Mosjøen")''')
-# cursor.execute('''INSERT INTO SetePåForekomst VALUES (1, True, 'SJ-sovevogn-1-1', '2023-04-04', 1, "Trondheim S", "Mosjøen")''')
-# cursor.execute('''INSERT INTO SetePåForekomst VALUES (2, True, 'SJ-sovevogn-1-1', '2023-04-04', 1, "Trondheim S", "Mosjøen")''')
-
-
-# bruker disse
 # cursor.execute('''INSERT INTO Kundeordre VALUES (1, '2023-02-02', '12:12:00', 1, 1, 1, '2023-04-03')''')
 # cursor.execute('''INSERT INTO KjøpAvKupé VALUES (1, 1, 'SJ-sovevogn-1-1')''')
-#cursor.execute('''INSERT INTO Kundeordre VALUES (2, '2023-02-02', '12:12:00', 1, 1, 1, '2023-04-03')''')
-#cursor.execute('''INSERT INTO KjøpAvSete VALUES (2, 1, 1)''')
+# cursor.execute('''INSERT INTO Kundeordre VALUES (2, '2023-02-02', '12:12:00', 1, 1, 1, '2023-04-03')''')
+# cursor.execute('''INSERT INTO KjøpAvSete VALUES (2, 1, 1)''')
+# cursor.execute('''INSERT INTO BillettTilDelstrekning VALUES(1, 'Steinkjer-Mosjøen')''')
 
-
-#togrute = input('Skriv inn ønsker togrutenr: ')
-#kundenr = input('Skriv inn ditt kundenr: ')
-#fra = input('Hvilken stasjon skal du reise fra? ')
-#til = input('Hvilken stasjon skal du reise til? ')
-seteEllerSeng = input('Vil du ha sete eller seng: ')
-
-# fraTest = ""
-# params = (fra, til)
-# #while (fraTest != fra):
-# finnStartDelstrekning = '''SELECT DS.Navn
-#     FROM Jernbanestasjon AS JS
-#     INNER JOIN Delstrekning AS DS ON (JS.Navn = DS.FraStasjonNavn)
-#     WHERE JS.Navn LIKE ?
-#     UNION
-#     SELECT DS.Navn
-#     FROM Jernbanestasjon AS JS
-#     INNER JOIN Delstrekning AS DS ON (JS.Navn = DS.TilStasjonNavn)
-#     WHERE JS.Navn = ?
-#     '''
-#     #fraTest = fra
-
-#print(cursor.execute(finnStartDelstrekning, params).fetchall())
-
-ruteNr = 3 #input('Hvilken rute ønsker du å reise med?: ')
-dato = "2023-04-04" #input(Hvilken dato ønsker du å reise på? (YYYY-MM-DD): )
-startStasjon = "Steinkjer" #input('Hvor starter din reise?: ')
-endeStasjon = "Trondheim S" #input('Hvor ender din reise?: ')
+ruteNr = 1 #input('Skriv inn ønsker togrutenr: ')
+kundeNr = 1 #input('Skriv inn ditt kundenr: ')
+dato = '2023-04-03' #input('Hvilken dato ønsker du å reise på? (YYYY-MM-DD): ')
+startStasjon = 'Trondheim S' #input('Hvilken stasjon skal du reise fra? ')
+endeStasjon = 'Mosjøen' #input('Hvilken stasjon skal du reise til? ')
+seteEllerSeng = 'sete' #input('Vil du ha sete eller seng: ')
 
 mellomstrekninger = cursor.execute(f'''SELECT DS.FraStasjonNavn, DS.TilSTasjonNavn 
                                         FROM Delstrekning AS DS
                                         INNER JOIN Banestrekning AS BS ON (BS.Navn = DS.BanestrekningNavn)
                                         INNER JOIN Togrute AS TR ON (TR.BanestrekningNavn = BS.Navn)
                                         WHERE TR.RuteNr = {ruteNr}''').fetchall()
+
+#print('Mellomstrekning: ')
+#print(mellomstrekninger)
 
 retning = cursor.execute(f'''SELECT Retning 
                             FROM Togrute 
@@ -76,7 +47,6 @@ mellomstasjoner = []
 
 check = False
 for i in range(0,len(mellomstrekninger)):
-    #for j in range(0, len(mellomstrekninger[i])):
     if ((str(mellomstrekninger[i][0]) == startStasjon) & (str(mellomstrekninger[i][1]) == endeStasjon)): #Ingen mellomstasjoner
         break
     if (mellomstrekninger[i][0] == startStasjon):
@@ -85,6 +55,9 @@ for i in range(0,len(mellomstrekninger)):
         break
     if check:
         mellomstasjoner.append(mellomstrekninger[i][1])
+
+#print('Melomstasjoner: ')
+#print(mellomstasjoner)
 
 
 # if (retning[0][0] == "MotHovedretning"):
@@ -102,18 +75,24 @@ for i in range(0, len(mellomstasjoner)):
 
 alleStasjoner.append(endeStasjon)
 
-# delstrekninger = []
-# for i in range(0, len(alleStasjoner)-1):
-#     delstrekninger.append(str(alleStasjoner[i]) + "-" + str(alleStasjoner[i+1]))
+#print('Alle stasjoner: ')
+#print(alleStasjoner)
 
-delstrekninger = tuple(str(alleStasjoner[i]) + "-" + str(alleStasjoner[i+1]) for i in range(0, len(alleStasjoner)-1))
+delstrekninger = tuple(str(alleStasjoner[i]) + "-" + 
+                       str(alleStasjoner[i+1]) for i in range(0, len(alleStasjoner)-1))
 
-params = ([dato], delstrekninger, [dato])
+print('Delstrekninger: ')
+print(delstrekninger)
 
 if seteEllerSeng == 'sete':
+    params = (dato, *delstrekninger, dato)
     delstrekninger_str = [str(elem) for elem in delstrekninger]
-    query = '''SELECT *
+    query = '''SELECT COUNT(DISTINCT S.SeteNr), S.SeteNr, VO.VognNr, ST.Avgangstid
     FROM Sete AS S
+    INNER JOIN VognIOppsett AS VO ON (VO.VognID = S.VognID)
+    INNER JOIN Togrute AS TR ON (TR.OppsettID = VO.OppsettID)
+    INNER JOIN Togrutetabell AS TRT ON (TRT.RuteNr = TR.RuteNr)
+    INNER JOIN StasjonITabell AS ST ON (ST.TabellNr = ST.TabellNr)
     WHERE S.SeteNr NOT IN (
         SELECT S.SeteNr
         FROM Sete AS S
@@ -123,32 +102,91 @@ if seteEllerSeng == 'sete':
         WHERE TF.Dato = ?
     )
     UNION
-    SELECT *
+    SELECT COUNT(DISTINCT S.SeteNr), S.SeteNr, VO.VognNr, ST.Avgangstid
     FROM Sete AS S
+    INNER JOIN VognIOppsett AS VO ON (VO.VognID = S.VognID)
+    INNER JOIN Togrute AS TR ON (TR.OppsettID = VO.OppsettID)
+    INNER JOIN Togrutetabell AS TRT ON (TRT.RuteNr = TR.RuteNr)
+    INNER JOIN StasjonITabell AS ST ON (ST.TabellNr = ST.TabellNr)
     WHERE S.SeteNr NOT IN (
-        SELECT S.SeteNr
+        SELECT DISTINCT S.SeteNr
         FROM Sete AS S
         INNER JOIN KjøpAvSete AS KS ON (KS.SeteNr = S.SeteNr)
         INNER JOIN Kundeordre AS KO ON (KO.OrdreNr = KS.OrdreNr)
         INNER JOIN Togruteforekomst AS TF ON (TF.Dato = KO.Dato)
         INNER JOIN BillettTilDelstrekning AS BD ON (BD.OrdreNr = KS.OrdreNr)
         WHERE BD.DelstrekningNavn IN ({}) AND TF.Dato = ?)
-    '''.format(', '.join('?' for _ in {delstrekninger}))
+    '''.format(','.join('?' for _ in delstrekninger))
 
-if seteEllerSeng == 'seng': 
-    query = '''SELECT *
+elif seteEllerSeng == 'seng': 
+    params = (dato)
+    query = '''SELECT COUNT(DISTINCT SK.KupéNr), SK.KupéNr, VO.VognNr, ST.Avgangstid
     FROM SoveKupé AS SK 
+    INNER JOIN VognIOppsett AS VO ON (VO.VognID = SK.VognID)
+    INNER JOIN Togrute AS TR ON (TR.OppsettID = VO.OppsettID)
+    INNER JOIN Togrutetabell AS TRT ON (TRT.RuteNr = TR.RuteNr)
+    INNER JOIN StasjonITabell AS ST ON (ST.TabellNr = ST.TabellNr)
     WHERE SK.KupéNr NOT IN (
         SELECT SK.KupéNr
         FROM Sovekupé AS SK
         INNER JOIN KjøpAvKupé AS KK ON (KK.KupéNr = SK.KupéNr)
         INNER JOIN Kundeordre AS KO ON (KO.OrdreNr = KS.OrdreNr)
         INNER JOIN Togruteforekomst AS TF ON (TF.Dato = KO.Dato)
+        WHERE TF.Dato = ?
     )'''
 
 result = cursor.execute(query, params)
 rows = result.fetchall()
-print(rows)
+
+print('')
+print('Ledige seter på rute-nr. ' + str(ruteNr) + ' fra ' + startStasjon + ' på dato ' + dato + ' er: ')
+header = ['BillettNr', 'SeteNr', 'VognNr', 'Avgangstid']
+print('-' * (len(header) * 15 + 1))
+print('|', end='')
+for h in header:
+    print(f' {h:<12} |', end='')
+print()
+print('-' * (len(header) * 15 + 1))
+for row in rows:
+    print('|', end='')
+    for value in rows[i]:
+        print(f' {str(value):<12} |', end='')
+    print()
+print('-' * (len(header) * 15 + 1))
+print('')
+valid_antall = False
+#antar at bruker skriver inn valid antall etter hvert, hvis ikke blir det uendelig loop
+while not valid_antall: 
+    antall = input('Hvor mange billetter ønsker du å kjøpe?')
+    if antall <= len(rows):
+        valid_antall = True
+
+now = datetime.datetime.now()
+date = now.strftime("%Y-%m-%d")
+time = now.strftime("%H:%M:%S.%f")
+
+if antall == 0:
+    print('Du ønsker ikke å kjøpe noen billetter')
+else: 
+    nylig_kjøpte = []
+    for i in range(1, antall):
+        input('Nå skal du få velge billett nr ' + i)
+        print('')
+        billettNr = input('Hvilken billett ønsker du å kjøpe? \nSkriv inn billettnummeret: ')
+        if billettNr not in nylig_kjøpte:
+            correct_billettNr = False
+            for row in rows:
+                if billettNr == row[0]:
+                    correct_billettNr = True
+            if not correct_billettNr:
+                print('Ikke gyldig billettNr')
+            else:
+                cursor.execute(''''INSERT INTO Kundeordre (DagKjøpt, TidKjøpt, Antall, KundeNr, RuteNr, Dato) VALUES (?, ?, ?, ?, ?, ?)''', 
+                            (date, time, antall, kundeNr, ruteNr, dato))
+                nylig_kjøpte.append(billettNr)
+        else: 
+            print('Denne billetten har du allerede kjøpt')
+
 
 con.commit()
 con.close()
