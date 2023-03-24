@@ -51,9 +51,9 @@ seteEllerSeng = input('Vil du ha sete eller seng: ')
 #print(cursor.execute(finnStartDelstrekning, params).fetchall())
 
 ruteNr = 3 #input('Hvilken rute ønsker du å reise med?: ')
-dato = "2023-04-14" #input(Hvilken dato ønsker du å reise på? (YYYY-MM-DD): )
-startStasjon = "Mo i Rana" #input('Hvor starter din reise?: ')
-endeStasjon = "Trondheim s" #input('Hvor ender din reise?: ')
+dato = "2023-04-04" #input(Hvilken dato ønsker du å reise på? (YYYY-MM-DD): )
+startStasjon = "Steinkjer" #input('Hvor starter din reise?: ')
+endeStasjon = "Trondheim S" #input('Hvor ender din reise?: ')
 
 mellomstrekninger = cursor.execute(f'''SELECT DS.FraStasjonNavn, DS.TilSTasjonNavn 
                                         FROM Delstrekning AS DS
@@ -102,13 +102,17 @@ for i in range(0, len(mellomstasjoner)):
 
 alleStasjoner.append(endeStasjon)
 
-delstrekninger = []
-for i in range(0, len(alleStasjoner)-1):
-    delstrekninger.append(str(alleStasjoner[i]) + "-" + str(alleStasjoner(i+1)))
+# delstrekninger = []
+# for i in range(0, len(alleStasjoner)-1):
+#     delstrekninger.append(str(alleStasjoner[i]) + "-" + str(alleStasjoner[i+1]))
 
+delstrekninger = tuple(str(alleStasjoner[i]) + "-" + str(alleStasjoner[i+1]) for i in range(0, len(alleStasjoner)-1))
+
+params = ([dato], delstrekninger, [dato])
 
 if seteEllerSeng == 'sete':
-    query = f'''SELECT *
+    delstrekninger_str = [str(elem) for elem in delstrekninger]
+    query = '''SELECT *
     FROM Sete AS S
     WHERE S.SeteNr NOT IN (
         SELECT S.SeteNr
@@ -116,6 +120,7 @@ if seteEllerSeng == 'sete':
         INNER JOIN KjøpAvSete AS KS ON (KS.SeteNr = S.SeteNr)
         INNER JOIN Kundeordre AS KO ON (KO.OrdreNr = KS.OrdreNr)
         INNER JOIN Togruteforekomst AS TF ON (TF.Dato = KO.Dato)
+        WHERE TF.Dato = ?
     )
     UNION
     SELECT *
@@ -127,8 +132,8 @@ if seteEllerSeng == 'sete':
         INNER JOIN Kundeordre AS KO ON (KO.OrdreNr = KS.OrdreNr)
         INNER JOIN Togruteforekomst AS TF ON (TF.Dato = KO.Dato)
         INNER JOIN BillettTilDelstrekning AS BD ON (BD.OrdreNr = KS.OrdreNr)
-        WHERE BD.DelstrekningNavn IN {delstrekninger}
-    '''
+        WHERE BD.DelstrekningNavn IN ({}) AND TF.Dato = ?)
+    '''.format(', '.join('?' for _ in {delstrekninger}))
 
 if seteEllerSeng == 'seng': 
     query = '''SELECT *
@@ -141,7 +146,7 @@ if seteEllerSeng == 'seng':
         INNER JOIN Togruteforekomst AS TF ON (TF.Dato = KO.Dato)
     )'''
 
-result = cursor.execute(query)
+result = cursor.execute(query, params)
 rows = result.fetchall()
 print(rows)
 
