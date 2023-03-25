@@ -1,8 +1,8 @@
 import sqlite3
-from datetime import datetime
+import datetime
 
-con = sqlite3.connect("jernbaneDBnynyny.db") #Må hente databasefilen
-
+# Må hente databasefilen
+con = sqlite3.connect("jernbaneDBnynyny.db") 
 cursor = con.cursor()
 
 # For å kunne teste i databasen
@@ -16,33 +16,33 @@ cursor = con.cursor()
 # cursor.execute('''INSERT INTO KjøpAvSete VALUES (2, 1, 1)''')
 # cursor.execute('''INSERT INTO BillettTilDelstrekning VALUES(1, 'Steinkjer-Mosjøen')''')
 
-ruteNr = 1 #input('Skriv inn ønsker togrutenr: ')
-kundeNr = 1 #input('Skriv inn ditt kundenr: ')
-dato = '2023-04-03' #input('Hvilken dato ønsker du å reise på? (YYYY-MM-DD): ')
-startStasjon = 'Trondheim S' #input('Hvilken stasjon skal du reise fra? ')
-endeStasjon = 'Mosjøen' #input('Hvilken stasjon skal du reise til? ')
-seteEllerSeng = 'sete' #input('Vil du ha sete eller seng: ')
+ruteNr = input('Skriv inn ønsker togrutenr: ')
+kundeNr = input('Skriv inn ditt kundenr: ')
+dato = input('Hvilken dato ønsker du å reise på? (YYYY-MM-DD): ')
+startStasjon = input('Hvilken stasjon skal du reise fra? ')
+endeStasjon = input('Hvilken stasjon skal du reise til? ')
+seteEllerSeng = input('Vil du ha sete eller seng: ')
 
+# Henter ut alle mellomstrekninger på rutenummeret som er valgt
 mellomstrekninger = cursor.execute(f'''SELECT DS.FraStasjonNavn, DS.TilSTasjonNavn 
                                         FROM Delstrekning AS DS
                                         INNER JOIN Banestrekning AS BS ON (BS.Navn = DS.BanestrekningNavn)
                                         INNER JOIN Togrute AS TR ON (TR.BanestrekningNavn = BS.Navn)
                                         WHERE TR.RuteNr = {ruteNr}''').fetchall()
 
-print('Mellomstrekning: ')
-print(mellomstrekninger)
-
+# Henter ut retningen på rutenummeret som er valgt
+# Dette for å sjekke om vi må endre retning når vi finner delstrekninger
 retning = cursor.execute(f'''SELECT Retning 
                             FROM Togrute 
                             WHERE RuteNr = {ruteNr}''').fetchall()
 
+# Bytter plass hvis retningen er mot hovedretning
 if(retning[0][0] == "MotHovedretning"):
-    #Bytter plass siden det er i mot hovedretning
     start = startStasjon
     startStasjon = endeStasjon
     endeStasjon = start
 
-#Hente ut alle mellomstasjoner til denne ruten
+# Hente ut alle mellomstasjoner til denne ruten
 mellomstasjoner = []
 
 check = False
@@ -55,10 +55,6 @@ for i in range(0,len(mellomstrekninger)):
         break
     if check:
         mellomstasjoner.append(mellomstrekninger[i][1])
-
-print('Melomstasjoner: ')
-print(mellomstasjoner)
-
 
 # if (retning[0][0] == "MotHovedretning"):
 #     Bytter tilbake og snur mellomstasjoner
@@ -75,14 +71,8 @@ for i in range(0, len(mellomstasjoner)):
 
 alleStasjoner.append(endeStasjon)
 
-print('Alle stasjoner: ')
-print(alleStasjoner)
-
 delstrekninger = tuple(str(alleStasjoner[i]) + "-" + 
                        str(alleStasjoner[i+1]) for i in range(0, len(alleStasjoner)-1))
-
-print('Delstrekninger: ')
-print(delstrekninger)
 
 if seteEllerSeng == 'sete':
     params = (dato, *delstrekninger, dato)
@@ -140,7 +130,7 @@ rows = result.fetchall()
 
 print('')
 print('Ledige seter på rute-nr. ' + str(ruteNr) + ' fra ' + startStasjon + ' på dato ' + dato + ' er: ')
-header = ['BillettNr', 'SeteNr', 'VognNr', 'Avgangstid']
+header = ['BillettNr', 'SeteNr', 'VognNr', 'VognID', 'Avgangstid']
 print('-' * (len(header) * 15 + 1))
 print('|', end='')
 for h in header:
@@ -154,10 +144,11 @@ for row in rows:
     print()
 print('-' * (len(header) * 15 + 1))
 print('')
+
 valid_antall = False
 #antar at bruker skriver inn valid antall etter hvert, hvis ikke blir det uendelig loop
 while not valid_antall: 
-    antall = input('Hvor mange billetter ønsker du å kjøpe?')
+    antall = int(input('Hvor mange billetter ønsker du å kjøpe?'))
     if antall <= len(rows):
         valid_antall = True
 
@@ -170,35 +161,38 @@ if antall == 0:
 else: 
     nylig_kjøpte = []
     kjøpt_samme = False
-    for i in range(1, antall):
-        input('Nå skal du få velge billett nr. ' + i)
+    for i in range(1, antall+1):
+        print('Nå skal du få velge billett nr. ' + str(i))
         print('')
         while not kjøpt_samme:
-            billettNr = input('Hvilken billett ønsker du å kjøpe? \nSkriv inn billettnummeret: ')
+            billettNr = int(input('Hvilken billett ønsker du å kjøpe? \nSkriv inn billettnummeret: '))
             if billettNr not in nylig_kjøpte:
+                billettNr_in_rows = False
                 for row in rows:
                     if billettNr == row[0]:
                         billettNr_in_rows = True
-                        seteNr = row[1]
+                        plass = row[1]
                         vognID = row[3]
                         break
                 if not billettNr_in_rows:
-                    print('Ikke gyldig billettNr')
+                    print('Ikke gyldig billettNr, prøv igjen')
                 else:
-                    cursor.execute(''''INSERT INTO Kundeordre (DagKjøpt, TidKjøpt, Antall, KundeNr, RuteNr, Dato) VALUES (?, ?, ?, ?, ?, ?)''', 
+                    cursor.execute('''INSERT INTO Kundeordre (DagKjøpt, TidKjøpt, Antall, KundeNr, RuteNr, Dato) VALUES (?, ?, ?, ?, ?, ?)''', 
                             (date, time, antall, kundeNr, ruteNr, dato))
-                    ordreNr = cursor.lastrowid()
+                    ordreNr = cursor.lastrowid
                     for delstrekning in delstrekninger:
-                        cursor.execute('''INSERT INTO BillettTilDelstekning VALUES (?, ?)''', 
+                        cursor.execute('''INSERT INTO BillettTilDelstrekning VALUES (?, ?)''', 
                                        (ordreNr, delstrekning))
                     if seteEllerSeng == 'sete':
-                        cursor.execute('''INSERT INTO KjøpAvSete VALUES 
+                        cursor.execute('''INSERT INTO KjøpAvSete VALUES (?, ?, ?)''',
+                                       (ordreNr, plass, vognID))
+                    elif seteEllerSeng == 'seng':
+                        cursor.execute('''INSERT INTO KjøpAvKupé VALUES (?, ?, ?)''',
+                                       (ordreNr, plass, vognID))
                     nylig_kjøpte.append(billettNr)
                     kjøpt_samme = True
             else: 
                 print('Denne billetten har du allerede kjøpt, prøv igjen')
-
-
 
 con.commit()
 con.close()
