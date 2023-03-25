@@ -29,8 +29,8 @@ mellomstrekninger = cursor.execute(f'''SELECT DS.FraStasjonNavn, DS.TilSTasjonNa
                                         INNER JOIN Togrute AS TR ON (TR.BanestrekningNavn = BS.Navn)
                                         WHERE TR.RuteNr = {ruteNr}''').fetchall()
 
-#print('Mellomstrekning: ')
-#print(mellomstrekninger)
+print('Mellomstrekning: ')
+print(mellomstrekninger)
 
 retning = cursor.execute(f'''SELECT Retning 
                             FROM Togrute 
@@ -56,8 +56,8 @@ for i in range(0,len(mellomstrekninger)):
     if check:
         mellomstasjoner.append(mellomstrekninger[i][1])
 
-#print('Melomstasjoner: ')
-#print(mellomstasjoner)
+print('Melomstasjoner: ')
+print(mellomstasjoner)
 
 
 # if (retning[0][0] == "MotHovedretning"):
@@ -75,8 +75,8 @@ for i in range(0, len(mellomstasjoner)):
 
 alleStasjoner.append(endeStasjon)
 
-#print('Alle stasjoner: ')
-#print(alleStasjoner)
+print('Alle stasjoner: ')
+print(alleStasjoner)
 
 delstrekninger = tuple(str(alleStasjoner[i]) + "-" + 
                        str(alleStasjoner[i+1]) for i in range(0, len(alleStasjoner)-1))
@@ -87,7 +87,7 @@ print(delstrekninger)
 if seteEllerSeng == 'sete':
     params = (dato, *delstrekninger, dato)
     delstrekninger_str = [str(elem) for elem in delstrekninger]
-    query = '''SELECT COUNT(DISTINCT S.SeteNr), S.SeteNr, VO.VognNr, ST.Avgangstid
+    query = '''SELECT COUNT(DISTINCT S.SeteNr), S.SeteNr, VO.VognNr, VO.VognID, ST.Avgangstid
     FROM Sete AS S
     INNER JOIN VognIOppsett AS VO ON (VO.VognID = S.VognID)
     INNER JOIN Togrute AS TR ON (TR.OppsettID = VO.OppsettID)
@@ -102,7 +102,7 @@ if seteEllerSeng == 'sete':
         WHERE TF.Dato = ?
     )
     UNION
-    SELECT COUNT(DISTINCT S.SeteNr), S.SeteNr, VO.VognNr, ST.Avgangstid
+    SELECT COUNT(DISTINCT S.SeteNr), S.SeteNr, VO.VognNr, VO.VognID, ST.Avgangstid
     FROM Sete AS S
     INNER JOIN VognIOppsett AS VO ON (VO.VognID = S.VognID)
     INNER JOIN Togrute AS TR ON (TR.OppsettID = VO.OppsettID)
@@ -120,7 +120,7 @@ if seteEllerSeng == 'sete':
 
 elif seteEllerSeng == 'seng': 
     params = (dato)
-    query = '''SELECT COUNT(DISTINCT SK.KupéNr), SK.KupéNr, VO.VognNr, ST.Avgangstid
+    query = '''SELECT COUNT(DISTINCT SK.KupéNr), SK.KupéNr, VO.VognNr, VO.VognID, ST.Avgangstid
     FROM SoveKupé AS SK 
     INNER JOIN VognIOppsett AS VO ON (VO.VognID = SK.VognID)
     INNER JOIN Togrute AS TR ON (TR.OppsettID = VO.OppsettID)
@@ -169,23 +169,35 @@ if antall == 0:
     print('Du ønsker ikke å kjøpe noen billetter')
 else: 
     nylig_kjøpte = []
+    kjøpt_samme = False
     for i in range(1, antall):
-        input('Nå skal du få velge billett nr ' + i)
+        input('Nå skal du få velge billett nr. ' + i)
         print('')
-        billettNr = input('Hvilken billett ønsker du å kjøpe? \nSkriv inn billettnummeret: ')
-        if billettNr not in nylig_kjøpte:
-            correct_billettNr = False
-            for row in rows:
-                if billettNr == row[0]:
-                    correct_billettNr = True
-            if not correct_billettNr:
-                print('Ikke gyldig billettNr')
-            else:
-                cursor.execute(''''INSERT INTO Kundeordre (DagKjøpt, TidKjøpt, Antall, KundeNr, RuteNr, Dato) VALUES (?, ?, ?, ?, ?, ?)''', 
+        while not kjøpt_samme:
+            billettNr = input('Hvilken billett ønsker du å kjøpe? \nSkriv inn billettnummeret: ')
+            if billettNr not in nylig_kjøpte:
+                for row in rows:
+                    if billettNr == row[0]:
+                        billettNr_in_rows = True
+                        seteNr = row[1]
+                        vognID = row[3]
+                        break
+                if not billettNr_in_rows:
+                    print('Ikke gyldig billettNr')
+                else:
+                    cursor.execute(''''INSERT INTO Kundeordre (DagKjøpt, TidKjøpt, Antall, KundeNr, RuteNr, Dato) VALUES (?, ?, ?, ?, ?, ?)''', 
                             (date, time, antall, kundeNr, ruteNr, dato))
-                nylig_kjøpte.append(billettNr)
-        else: 
-            print('Denne billetten har du allerede kjøpt')
+                    ordreNr = cursor.lastrowid()
+                    for delstrekning in delstrekninger:
+                        cursor.execute('''INSERT INTO BillettTilDelstekning VALUES (?, ?)''', 
+                                       (ordreNr, delstrekning))
+                    if seteEllerSeng == 'sete':
+                        cursor.execute('''INSERT INTO KjøpAvSete VALUES 
+                    nylig_kjøpte.append(billettNr)
+                    kjøpt_samme = True
+            else: 
+                print('Denne billetten har du allerede kjøpt, prøv igjen')
+
 
 
 con.commit()
