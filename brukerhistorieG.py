@@ -2,7 +2,7 @@ import sqlite3
 import datetime
 
 # Må hente databasefilen
-con = sqlite3.connect("jernbaneDBnynyny.db") 
+con = sqlite3.connect("jernbaneDBdenne.db") 
 cursor = con.cursor()
 
 ruteNr = 1 #input('Skriv inn ønsker togrutenr: ')

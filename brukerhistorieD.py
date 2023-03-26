@@ -1,6 +1,6 @@
 import sqlite3
 
-con = sqlite3.connect("jernbaneDBnynyny.db") # Må hente databasefilen
+con = sqlite3.connect("jernbaneDBdenne.db") # Må hente databasefilen
 cursor = con.cursor()
 
 # Bruker skal kunne søke etter togruter som går mellom en 
