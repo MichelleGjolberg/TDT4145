@@ -1,10 +1,18 @@
 import sqlite3
+<<<<<<< HEAD
 con = sqlite3.connect("jernbaneDBdenne.db") #Må hente databasefilen
+=======
+con = sqlite3.connect("jernbaneDBnynyny.db") #Må hente databasefilen
+>>>>>>> 6c2bb70b625b9796a4ff139f7ae1c7333c4653c4
 
 cursor = con.cursor()
 
 #Legger til Banestrekningen
+<<<<<<< HEAD
 cursor.execute('''INSERT INTO Banestrekning VALUES ('Nordlandsbanen','Diesel','Retning1','Trondheim S','Bodø')''')
+=======
+cursor.execute('''INSERT INTO Banestrekning VALUES ('Nordlandsbanen','Diesel','Retning1','Trondheim','Bodø')''')
+>>>>>>> 6c2bb70b625b9796a4ff139f7ae1c7333c4653c4
 
 #Legger til mellomstasjoner
 cursor.execute('''INSERT INTO mellomstasjonBane VALUES ('Nordlandsbanen','Steinkjer')''')
@@ -21,7 +29,11 @@ cursor.execute('''INSERT INTO Jernbanestasjon VALUES ('Fauske','34.0')''')
 cursor.execute('''INSERT INTO Jernbanestasjon VALUES ('Bodø','4.1')''')
 
 #Legger til delstrekninger
+<<<<<<< HEAD
 cursor.execute('''INSERT INTO Delstrekning VALUES ('Trondheim S-Steinkjer','120','Dobbeltspor','Trondheim S','Steinkjer', 'Nordlandsbanen')''')
+=======
+cursor.execute('''INSERT INTO Delstrekning VALUES ('Trondheim-Steinkjer','120','Dobbeltspor','Trondheim','Steinskjer', 'Nordlandsbanen')''')
+>>>>>>> 6c2bb70b625b9796a4ff139f7ae1c7333c4653c4
 cursor.execute('''INSERT INTO Delstrekning VALUES ('Steinkjer-Mosjøen','280','Dobbeltspor','Steinskjer','Mosjøen', 'Nordlandsbanen')''')
 cursor.execute('''INSERT INTO Delstrekning VALUES ('Mosjøen-Mo i Rana','90','Dobbeltspor','Mosjøen','Mo i Rana', 'Nordlandsbanen')''')
 cursor.execute('''INSERT INTO Delstrekning VALUES ('Mo i Rana-Fauske','170','Dobbeltspor','Mo i Rana','Fauske', 'Nordlandsbanen')''')
