@@ -5,23 +5,12 @@ import datetime
 con = sqlite3.connect("jernbaneDBnynyny.db") 
 cursor = con.cursor()
 
-# For å kunne teste i databasen
-# cursor.execute('''INSERT INTO Sete VALUES (1, True, 'SJ-sittevogn-1-1')''')
-# cursor.execute('''INSERT INTO Sete VALUES (2, True, 'SJ-sittevogn-1-1')''')
-# cursor.execute('''INSERT INTO Sovekupé VALUES (1, True, 'SJ-sovevogn-1-1')''')
-# cursor.execute('''INSERT INTO Sovekupé VALUES (2, True, 'SJ-sovevogn-1-1')''')
-# cursor.execute('''INSERT INTO Kundeordre VALUES (1, '2023-02-02', '12:12:00', 1, 1, 1, '2023-04-03')''')
-# cursor.execute('''INSERT INTO KjøpAvKupé VALUES (1, 1, 'SJ-sovevogn-1-1')''')
-# cursor.execute('''INSERT INTO Kundeordre VALUES (2, '2023-02-02', '12:12:00', 1, 1, 1, '2023-04-03')''')
-# cursor.execute('''INSERT INTO KjøpAvSete VALUES (2, 1, 1)''')
-# cursor.execute('''INSERT INTO BillettTilDelstrekning VALUES(1, 'Steinkjer-Mosjøen')''')
-
-ruteNr = input('Skriv inn ønsker togrutenr: ')
-kundeNr = input('Skriv inn ditt kundenr: ')
-dato = input('Hvilken dato ønsker du å reise på? (YYYY-MM-DD): ')
-startStasjon = input('Hvilken stasjon skal du reise fra? ')
-endeStasjon = input('Hvilken stasjon skal du reise til? ')
-seteEllerSeng = input('Vil du ha sete eller seng: ')
+ruteNr = 1 #input('Skriv inn ønsker togrutenr: ')
+kundeNr = 1 #input('Skriv inn ditt kundenr: ')
+dato = "2023-04-03"#input('Hvilken dato ønsker du å reise på? (YYYY-MM-DD): ')
+startStasjon = "Trondheim S"#input('Hvilken stasjon skal du reise fra? ')
+endeStasjon = "Mosjøen"#input('Hvilken stasjon skal du reise til? ')
+seteEllerSeng = "seng"#input('Vil du ha sete eller seng: ')
 
 # Henter ut alle mellomstrekninger på rutenummeret som er valgt
 mellomstrekninger = cursor.execute(f'''SELECT DS.FraStasjonNavn, DS.TilSTasjonNavn 
@@ -47,43 +36,51 @@ mellomstasjoner = []
 
 check = False
 for i in range(0,len(mellomstrekninger)):
-    if ((str(mellomstrekninger[i][0]) == startStasjon) & (str(mellomstrekninger[i][1]) == endeStasjon)): #Ingen mellomstasjoner
+
+    # Ingen mellomstasjoner dersom første stasjon er start og siste stasjon er ende
+    if ((str(mellomstrekninger[i][0]) == startStasjon) & (str(mellomstrekninger[i][1]) == endeStasjon)): 
         break
-    if (mellomstrekninger[i][0] == startStasjon):
+
+    # Setter i gang å legge til i mellomstasjoner når man har nådd startstasjonen
+    if (mellomstrekninger[i][0] == startStasjon): 
         check = True
-    if (mellomstrekninger[i][1] == endeStasjon): #Avbryter når man har nådd ende stasjonen
+
+    # Avbryter når man har nådd ende stasjonen    
+    if (mellomstrekninger[i][1] == endeStasjon): 
         break
+
     if check:
         mellomstasjoner.append(mellomstrekninger[i][1])
 
-# if (retning[0][0] == "MotHovedretning"):
-#     Bytter tilbake og snur mellomstasjoner
-#     start = startStasjon
-#     startStasjon = endeStasjon
-#     endeStasjon = start
-#     mellomstasjoner.reverse()
-
+# Ønsker å bruke alle stasjoner til å finne alle delstrekninger
+# Bruker dette dersom bruker ønsker å kjøpe et sette (må sjekke for overlapping)
 alleStasjoner = []
+
+# Legger til startstasjonen
 alleStasjoner.append(startStasjon)
 
+# Legger til alle mellomstasjoner
 for i in range(0, len(mellomstasjoner)):
     alleStasjoner.append(mellomstasjoner[i])
 
+# Legger til endestasjonen
 alleStasjoner.append(endeStasjon)
 
+# Finner alle delstrekninger
 delstrekninger = tuple(str(alleStasjoner[i]) + "-" + 
                        str(alleStasjoner[i+1]) for i in range(0, len(alleStasjoner)-1))
 
+# Skiller mellom kjøp av sete og seng
 if seteEllerSeng == 'sete':
-    params = (dato, *delstrekninger, dato)
+    params = (startStasjon, dato, startStasjon, *delstrekninger, dato)
     delstrekninger_str = [str(elem) for elem in delstrekninger]
     query = '''SELECT COUNT(DISTINCT S.SeteNr), S.SeteNr, VO.VognNr, VO.VognID, ST.Avgangstid
     FROM Sete AS S
     INNER JOIN VognIOppsett AS VO ON (VO.VognID = S.VognID)
     INNER JOIN Togrute AS TR ON (TR.OppsettID = VO.OppsettID)
     INNER JOIN Togrutetabell AS TRT ON (TRT.RuteNr = TR.RuteNr)
-    INNER JOIN StasjonITabell AS ST ON (ST.TabellNr = ST.TabellNr)
-    WHERE S.SeteNr NOT IN (
+    INNER JOIN StasjonITabell AS ST ON (TRT.TabellNr = ST.TabellNr)
+    WHERE ST.StasjonNavn = ? AND S.SeteNr NOT IN (
         SELECT S.SeteNr
         FROM Sete AS S
         INNER JOIN KjøpAvSete AS KS ON (KS.SeteNr = S.SeteNr)
@@ -97,8 +94,8 @@ if seteEllerSeng == 'sete':
     INNER JOIN VognIOppsett AS VO ON (VO.VognID = S.VognID)
     INNER JOIN Togrute AS TR ON (TR.OppsettID = VO.OppsettID)
     INNER JOIN Togrutetabell AS TRT ON (TRT.RuteNr = TR.RuteNr)
-    INNER JOIN StasjonITabell AS ST ON (ST.TabellNr = ST.TabellNr)
-    WHERE S.SeteNr NOT IN (
+    INNER JOIN StasjonITabell AS ST ON (TRT.TabellNr = ST.TabellNr)
+    WHERE ST.StasjonNavn = ? AND S.SeteNr NOT IN (
         SELECT DISTINCT S.SeteNr
         FROM Sete AS S
         INNER JOIN KjøpAvSete AS KS ON (KS.SeteNr = S.SeteNr)
@@ -109,28 +106,32 @@ if seteEllerSeng == 'sete':
     '''.format(','.join('?' for _ in delstrekninger))
 
 elif seteEllerSeng == 'seng': 
-    params = (dato)
-    query = '''SELECT COUNT(DISTINCT SK.KupéNr), SK.KupéNr, VO.VognNr, VO.VognID, ST.Avgangstid
+    params = (startStasjon, dato)
+    query = '''SELECT ROW_NUMBER() OVER (ORDER BY SK.KupéNr) AS row_num, SK.KupéNr, VO.VognNr, VO.VognID, ST.Avgangstid
     FROM SoveKupé AS SK 
     INNER JOIN VognIOppsett AS VO ON (VO.VognID = SK.VognID)
     INNER JOIN Togrute AS TR ON (TR.OppsettID = VO.OppsettID)
     INNER JOIN Togrutetabell AS TRT ON (TRT.RuteNr = TR.RuteNr)
-    INNER JOIN StasjonITabell AS ST ON (ST.TabellNr = ST.TabellNr)
-    WHERE SK.KupéNr NOT IN (
-        SELECT SK.KupéNr
-        FROM Sovekupé AS SK
-        INNER JOIN KjøpAvKupé AS KK ON (KK.KupéNr = SK.KupéNr)
-        INNER JOIN Kundeordre AS KO ON (KO.OrdreNr = KS.OrdreNr)
+    INNER JOIN StasjonITabell AS ST ON (TRT.TabellNr = ST.TabellNr)
+    WHERE ST.StasjonNavn = ? AND SK.KupéNr NOT IN (
+        SELECT SK2.KupéNr
+        FROM Sovekupé AS SK2
+        INNER JOIN KjøpAvKupé AS KK ON (KK.KupéNr = SK2.KupéNr)
+        INNER JOIN Kundeordre AS KO ON (KO.OrdreNr = KK.OrdreNr)
         INNER JOIN Togruteforekomst AS TF ON (TF.Dato = KO.Dato)
-        WHERE TF.Dato = ?
-    )'''
+        WHERE TF.Dato = ?)
+    GROUP BY SK.KupéNr, VO.VognNr, VO.VognID, ST.Avgangstid'''
 
 result = cursor.execute(query, params)
 rows = result.fetchall()
 
+# Printer resultattabellen i en tabell
 print('')
 print('Ledige seter på rute-nr. ' + str(ruteNr) + ' fra ' + startStasjon + ' på dato ' + dato + ' er: ')
-header = ['BillettNr', 'SeteNr', 'VognNr', 'VognID', 'Avgangstid']
+if seteEllerSeng == 'sete':
+    header = ['BillettNr', 'SeteNr', 'VognNr', 'VognID', 'Avgangstid']
+elif seteEllerSeng == 'seng':
+    header = ['BillettNr', 'KupéNr', 'VognNr', 'VognID', 'Avgangstid']
 print('-' * (len(header) * 15 + 1))
 print('|', end='')
 for h in header:
@@ -139,43 +140,66 @@ print()
 print('-' * (len(header) * 15 + 1))
 for row in rows:
     print('|', end='')
-    for value in rows[i]:
+    for value in row:
         print(f' {str(value):<12} |', end='')
     print()
 print('-' * (len(header) * 15 + 1))
 print('')
 
+# Antall billetter bruker ønsker å kjøpe kan ikke være større enn antall ledige billetter
 valid_antall = False
-#antar at bruker skriver inn valid antall etter hvert, hvis ikke blir det uendelig loop
+gyldige_billetter = True
+# Antar at bruker skriver inn valid antall etter hvert, hvis ikke blir det uendelig loop
 while not valid_antall: 
-    antall = int(input('Hvor mange billetter ønsker du å kjøpe?'))
-    if antall <= len(rows):
-        valid_antall = True
 
+    # Sjekker først om bruker i det hele tatt kan kjøpe billetter
+    if rows[0][0] == 0:
+        valid_antall = True
+        gyldige_billetter = False
+
+    else: 
+        antall = int(input('Hvor mange billetter ønsker du å kjøpe?'))
+        if antall <= len(rows):
+            valid_antall = True
+
+# Henter ut nåværende dato og tidspunkt
 now = datetime.datetime.now()
 date = now.strftime("%Y-%m-%d")
 time = now.strftime("%H:%M:%S.%f")
 
-if antall == 0:
+if not gyldige_billetter:
+    print('Det var ingen ledige billetter')
+
+elif antall == 0:
     print('Du ønsker ikke å kjøpe noen billetter')
+
 else: 
+    # Bruker skal ikke kunne kjøpe en billett den har kjøpt fra før
     nylig_kjøpte = []
-    kjøpt_samme = False
+    
+    # Bruker skal velge hvilken hvilken billett den ønsker å kjøpe
     for i in range(1, antall+1):
         print('Nå skal du få velge billett nr. ' + str(i))
-        print('')
+        kjøpt_samme = False
+
+        # Får velge billett frem til den velger et gyldig billettNr
+        # Antar at bruker skriver inn riktig antall etterhvert 
         while not kjøpt_samme:
             billettNr = int(input('Hvilken billett ønsker du å kjøpe? \nSkriv inn billettnummeret: '))
+
             if billettNr not in nylig_kjøpte:
                 billettNr_in_rows = False
+
                 for row in rows:
                     if billettNr == row[0]:
                         billettNr_in_rows = True
                         plass = row[1]
                         vognID = row[3]
                         break
+
                 if not billettNr_in_rows:
                     print('Ikke gyldig billettNr, prøv igjen')
+
                 else:
                     cursor.execute('''INSERT INTO Kundeordre (DagKjøpt, TidKjøpt, Antall, KundeNr, RuteNr, Dato) VALUES (?, ?, ?, ?, ?, ?)''', 
                             (date, time, antall, kundeNr, ruteNr, dato))
@@ -191,6 +215,7 @@ else:
                                        (ordreNr, plass, vognID))
                     nylig_kjøpte.append(billettNr)
                     kjøpt_samme = True
+
             else: 
                 print('Denne billetten har du allerede kjøpt, prøv igjen')
 

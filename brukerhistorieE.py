@@ -5,7 +5,6 @@ cursor = con.cursor()
 
 registrereBoolean = input('Do you want to register Y/N: ') 
 
-
 if registrereBoolean == 'Y':
     Navn = input('Enter name: ') 
     Epost = input('Enter email: ') 
@@ -16,7 +15,6 @@ if registrereBoolean == 'Y':
 
     cursor.execute('''INSERT INTO KUNDE (Navn, Epost, MobilNr) VALUES (?, ?, ?)''', (Navn, Epost, MobilNr))  
     KundeNr = cursor.lastrowid
-
 
 con.commit()
 con.close()

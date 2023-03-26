@@ -3,11 +3,6 @@ import sqlite3
 con = sqlite3.connect("jernbaneDBnynyny.db") # Må hente databasefilen
 cursor = con.cursor()
 
-# Bruker skal kunne søke etter togruter som går mellom en 
-# startstasjon og en sluttstasjon, med utgangspunkt i en 
-# dato og et klokkeslett. Alle ruter den samme dagen og 
-# den neste skal returneres, sortert på tid.
-
 startstasjon = input('Startstasjon: ')
 endestasjon = input('Endestasjon: ')
 date = input('Dato (YYYY-MM-DD): ')
@@ -17,7 +12,7 @@ while not all(part.isdigit() for part in date.split('-')):
     print("Invalid date format")
     date = input('Dato (YYYY-MM-DD): ')
   
-time = input('Tid: ')
+time = input('Tid (hh:mm:ss): ')
 
 time_incorrect = True
 
@@ -40,7 +35,7 @@ else:
     next_day, next_month, next_year = day + 1, month, year
 new_date = f"{next_year:04d}-{next_month:02d}-{next_day:02d}"
 
-
+# Parametre som skal brukes i spørringen
 params = (date, startstasjon, endestasjon, time, # Startstasjon --> endestasjon, samme dag, fra tid
           date, startstasjon, endestasjon, time, # Startstasjon --> mellomstasjon, samme dag, fra tid
           date, startstasjon, endestasjon, time, # Mellomstasjon --> endestasjon, samme dag, fra tid
@@ -132,6 +127,7 @@ WHERE TRF.Dato = ? AND MR1.StasjonNavn = ? AND MR2.StasjonNavn = ?'''
 result = cursor.execute(query, params)
 rows = result.fetchall()
 
+# Printer pent i tabell
 header = ['RuteNr', 'Dato', 'Avgangstid']
 print('-' * (len(header) * 12 + 4))
 print('|', end='')
